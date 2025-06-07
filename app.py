@@ -4,8 +4,13 @@ from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 
+@app.route('/')
+def home():
+    return "Flask app is running!"
+
 @app.route('/scrape', methods=['GET'])
 def scrape():
+    print("Request received to /scrape")
     url = request.args.get('url')
     if not url:
         return jsonify({'error': 'Missing URL'}), 400
