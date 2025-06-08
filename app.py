@@ -1,29 +1,31 @@
 from flask import Flask, request, Response
 import requests
-import os  # <-- import os to access environment variables
+import urllib.parse
 
 app = Flask(__name__)
 
 @app.route("/pdf")
 def proxy_pdf():
-    pdf_url = request.args.get("url")
-    if not pdf_url:
+    encoded_url = request.args.get("url")
+    if not encoded_url:
         return "Missing 'url' parameter", 400
 
+    # Decode URL in case it was encoded by Make or Render
+    pdf_url = urllib.parse.unquote(encoded_url)
+
     try:
-        response = requests.get(pdf_url, verify=False, timeout=10)
+        # Add User-Agent to avoid rejection from the server
+        headers = {
+            "User-Agent": "Mozilla/5.0 (compatible; RenderPDFProxy/1.0; +https://render.com/)"
+        }
+
+        response = requests.get(pdf_url, headers=headers, timeout=10)
         response.raise_for_status()
+
         return Response(
             response.content,
             content_type="application/pdf",
-            headers={
-                "Content-Disposition": "inline; filename=kozlony.pdf"
-            }
+            headers={"Content-Disposition": "inline; filename=kozlony.pdf"}
         )
     except Exception as e:
         return f"Error downloading PDF: {str(e)}", 404
-
-# 🟢 This part ensures it works on Render
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
