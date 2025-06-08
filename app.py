@@ -1,5 +1,6 @@
 from flask import Flask, request, Response
 import requests
+import os  # <-- import os to access environment variables
 
 app = Flask(__name__)
 
@@ -21,3 +22,8 @@ def proxy_pdf():
         )
     except Exception as e:
         return f"Error downloading PDF: {str(e)}", 404
+
+# 🟢 This part ensures it works on Render
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
